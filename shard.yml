@@ -12,6 +12,14 @@ dependencies:
     github: kemalcr/kemal
   graphql-crystal:
     github: ziprandom/graphql-crystal
+  micrate:
+    github: amberframework/micrate
+  pg:
+    github: will/crystal-pg
+  db:
+    github: crystal-lang/crystal-db
+  sam:
+    github: imdrasil/sam.cr
 
 # development_dependencies:
 #   webmock:

@@ -2,3 +2,5 @@ lib
 .direnv
 .envrc
 ci
+result
+result-2

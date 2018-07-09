@@ -1,0 +1,14 @@
+<h2>Build exited with status <%= exit_status %></h2>
+<h3>Meta Information</h3>
+<dl>
+  <dt>PR:</dt>
+  <dd><a href="<%= pr_url %>"><%= pr_url %></a></dd>
+  <dt>Duration:</dt>
+  <dd><%= duration %></dd>
+</dl>
+<h3>Log</h3>
+<pre class="console-output">
+<%- logs.each do |log| -%>
+<time datetime="<%= log.time %>"><%= log.time %></time>&nbsp;<%= log.line %>
+<%- end -%>
+</pre>

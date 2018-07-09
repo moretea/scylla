@@ -1,0 +1,19 @@
+---
+version: '3.4'
+
+volumes:
+  scylla-pg:
+    driver: local
+services:
+  postgres:
+    image: timescale/timescaledb
+    restart: always
+    volumes:
+      - 'scylla-pg:/var/lib/postgresql/data'
+    environment:
+      POSTGRES_DB: scylla
+      POSTGRES_USER: scylla
+      POSTGRES_PASSWORD: scylla
+      PGDATA: '/var/lib/postgresql/data'
+    ports:
+      - "5434:5432"

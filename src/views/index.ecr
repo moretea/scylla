@@ -1,9 +1,38 @@
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Scylla</title>
-  </head>
-  <body>
-    <%= content %>
-  </body>
-</html>
+<h2>Nix Flavoured Continuous Integration</h2>
+<p>
+  Scylla is a simple CI server that solves one thing:
+  Evaluate <a href="https://nixos.org/nix/">Nix</a> derivations and inform you and GitHub about the results.
+</p>
+<p>
+  Scylla is implemented in Crystal, uses PostgreSQL for persistence, and Nix for
+  building.<br/>
+  I try to keep the moving parts as reliable as possible, since at the
+  end of the day, all we care about is that it works.
+</p>
+<h3 id="#what_scylla_can_do_for_you">What Scylla Can Do For You</h3>
+<p>
+  <ul>
+    <li>Create binaries</li>
+    <li>Run tests</li>
+    <li>Populate your Nix cache</li>
+    <li>Push to <a href="https://cachix.org/">Cachix</a></li>
+    <li>Update your GitHub PR status</li>
+    <li>Serve logs of your project builds</li>
+  </ul>
+</p>
+<h3 id="#getting_started">Getting Started</h3>
+<ol>
+  <li>
+    <h4>Get an OAuth token</h4>
+    <p>
+      Navigate to <a href="https://github.com/settings/tokens">https://github.com/settings/tokens</a>
+      and generate a new OAuth token. It only needs the <code>repo:status</code> permission.
+    </p>
+  </li>
+  <li>
+    <h4>Add the webhook</h4>
+    <p>
+
+    </p>
+  </li>
+</ol>
