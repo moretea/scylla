@@ -4,6 +4,13 @@ require "json"
 require "http/client"
 
 module Util
+  struct ShResult
+    property stdout : Array(String), stderr : Array(String), status : Process::Status
+
+    def initialize(@stdout, @stderr, @status)
+    end
+  end
+
   def sh(*cmd)
     executable = ""
     args = [] of String
@@ -36,16 +43,16 @@ module Util
       raise "Failure while running #{executable}"
     end
 
-    [stdout, stderr, $?]
+    ShResult.new(stdout, stderr, $?)
   end
 end
 
-struct GithubClient
+struct GitHubClient
   def self.prs(owner : String, name : String)
     res = HTTP::Client.post(
       "https://api.github.com/graphql",
       headers: HTTP::Headers{
-        "Authorization" => "bearer d6848acadca6e1277a2ec213e052b0e9c930e897",
+        "Authorization" => "bearer #{ENV["GITHUB_TOKEN"]}",
       },
       body: {
         "query" => %(
@@ -66,18 +73,38 @@ struct GithubClient
 
     pp res
   end
+
+  def self.set_status(url : URI, status : String)
+    client = HTTP::Client.new(url)
+    client.basic_auth("manveru", ENV["GITHUB_TOKEN"])
+    res = client.post(
+      url.path.not_nil!,
+      body: {
+        "state"       => status,
+        "target_url"  => "http://example.com",
+        "description" => "Building...",
+        "context":       "Scylla",
+      }.to_json
+    )
+    pp res
+  end
 end
 
 struct CI
   extend Util
 
-  def self.build(project : String, branch : String)
-    FileUtils.mkdir_p "ci"
-    dest = "ci/#{project.gsub(/\W+/, "_")}-#{branch}-#{Random.new.hex(16)}"
-    pp sh("git", "clone", "--single-branch", "-b", branch, project, dest)
-    pp sh("nix-build", "--show-trace", "./#{dest}/ci.nix")
+  def self.build_from_git(clone_url : String, sha : String)
+    dest = "ci/#{clone_url.gsub(/\W+/, "_")}-#{sha}"
+    FileUtils.mkdir_p dest
+    pp sh("git", "clone", clone_url, "#{dest}/clone")
+    status = sh("nix-build", "--no-out-link", "--show-trace", "./#{dest}/clone/ci.nix")
   rescue ex
-    pp ex
+    raise ex
+  ensure
+    if status
+      File.write("#{dest}/stdout", status.stdout.join("\n"))
+      File.write("#{dest}/stderr", status.stderr.join("\n"))
+    end
   end
 end
 
@@ -87,11 +114,93 @@ end
 
 post "/github-webhook" do |env|
   pp env
-  body = env.request.body
-  puts body.gets_to_end if body
+  if body_io = env.request.body
+    GitHubHook.handle(body_io.gets_to_end, env.request.headers["X-GitHub-Event"])
+    "OK"
+  end
 end
 
 struct GitHubHook
+  TYPE_MAPPING = {
+    "pull_request" => GitHubHook::PullRequest,
+  }
+
+  def self.handle(body, event)
+    puts body
+    if handler = TYPE_MAPPING[event]?
+      handler.from_json(body).handle
+    else
+      puts body
+    end
+  end
+
+  struct PullRequest
+    JSON.mapping(
+      action: String,
+      number: Int64,
+      pull_request: PR,
+    )
+
+    def handle
+      status "pending"
+      pp CI.build_from_git(pull_request.head.repo.clone_url, pull_request.head.sha)
+      status "success"
+    rescue ex
+      pp ex
+      status "failure"
+    end
+
+    def status(kind)
+      @uri ||= URI.parse(pull_request.statuses_url)
+      GitHubClient.set_status(@uri.not_nil!, kind)
+    end
+
+    struct PR
+      struct Head
+        JSON.mapping(
+          label: String,
+          ref: String,
+          sha: String,
+          repo: Repository,
+        )
+      end
+
+      JSON.mapping(
+        url: String,
+        id: Int64,
+        node_id: String,
+        html_url: String,
+        diff_url: String,
+        patch_url: String,
+        issue_url: String,
+        number: Int64,
+        state: String,
+        locked: Bool,
+        title: String,
+        commits_url: String,
+        review_comments_url: String,
+        review_comment_url: String,
+        comments_url: String,
+        statuses_url: String,
+        body: String,
+        created_at: Time,
+        updated_at: Time,
+        closed_at: Time | Nil,
+        merged_at: Time | Nil,
+        merge_commit_sha: String | Nil,
+        head: Head,
+      )
+    end
+  end
+
+  struct Push
+    JSON.mapping(
+      ref: String,
+      after: String,
+      repository: Repository
+    )
+  end
+
   struct Hook
     struct LastResponse
       JSON.mapping(
@@ -141,11 +250,11 @@ struct GitHubHook
       created_at: Time,
       updated_at: Time,
       pushed_at: Time,
+      statuses_url: String,
       git_url: String,
       ssh_url: String,
       clone_url: String,
       svn_url: String,
-      homepage: String,
       size: Int64,
       stargazers_count: Int64,
       watchers_count: Int64,
@@ -174,6 +283,5 @@ struct GitHubHook
   )
 end
 
-pp GitHubHook.from_json(File.read("hook_added_log.json"))
 # CI.build("https://github.com/manveru/bundix", "master")
-# Kemal.run
+Kemal.run
