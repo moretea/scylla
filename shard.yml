@@ -1,0 +1,20 @@
+name: scylla
+version: 0.1.0
+
+authors:
+  - Michael Fellinger <mf@seitenschmied.at>
+
+description: |
+  Tiny CI server for Nix
+
+dependencies:
+  kemal:
+    github: kemalcr/kemal
+  graphql-crystal:
+    github: ziprandom/graphql-crystal
+
+# development_dependencies:
+#   webmock:
+#     github: manastech/webmock.cr
+
+license: MIT
