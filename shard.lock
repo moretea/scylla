@@ -44,3 +44,7 @@ shards:
     github: imdrasil/sam.cr
     version: 0.2.4
 
+  tren:
+    github: sdogruyol/tren
+    version: 0.4.0
+

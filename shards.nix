@@ -65,4 +65,10 @@
     rev = "v0.2.4";
     sha256 = "0d4in9k6xib1l88x4ybsszyv0gk5ggddv0s0phv86cwr88ws80v5";
   };
+  tren = {
+    owner = "sdogruyol";
+    repo = "tren";
+    rev = "v0.4.0";
+    sha256 = "0zl1m091bnm96ykzwkbbahg5m45j2imzr06zzpzs8y44r53sxp5z";
+  };
 }

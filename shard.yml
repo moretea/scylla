@@ -20,6 +20,8 @@ dependencies:
     github: crystal-lang/crystal-db
   sam:
     github: imdrasil/sam.cr
+  tren:
+    github: sdogruyol/tren
 
 # development_dependencies:
 #   webmock:

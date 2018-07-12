@@ -1,7 +1,4 @@
 { pkgs ? import ./nix/nixpkgs.nix }: with pkgs; {
-  server-static = callPackage ./. {};
-  server-test = callPackage ./. { test = true; };
-  scylla = {
-    otherStuff = callPackage ./. { unknown = true; };
-  };
+  scylla = callPackage ./. {};
+  test = callPackage ./. { test = true; };
 }

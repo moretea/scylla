@@ -1,4 +1,4 @@
-{stdenv, lib, fetchFromGitHub, crystal, libxml2, openssl, zlib, pkgconfig
+{ stdenv, lib, fetchFromGitHub, crystal, libxml2, openssl, zlib, pkgconfig
 , test ? false }:
 let
   crystalPackages = lib.mapAttrs (name: src:
@@ -28,9 +28,9 @@ let
     '';
   };
 
-  run-tests = if test then ''
+  run-tests = ''
     echo run tests...
-  '' else "echo skip tests";
+  '';
 in stdenv.mkDerivation {
   name = "scylla-static";
   src = fetchGit ./.;
@@ -51,7 +51,7 @@ in stdenv.mkDerivation {
     chmod +w -R .
     rm -rf lib
     ln -s ${crystalLib} lib
-    ${run-tests}
+    ${lib.optionalString test run-tests}
     ${crystal}/bin/crystal build --verbose --progress --release src/server.cr -o $out/bin/scylla
   '';
 }
