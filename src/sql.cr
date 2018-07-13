@@ -21,7 +21,10 @@ module Scylla
       logs = [] of Log
 
       Repo.query(<<-SQL, result_id) do |rs|
-        SELECT time, kind, line FROM logs WHERE result_id = $1
+        SELECT time, kind, line
+        FROM logs
+        WHERE result_id = $1
+        ORDER BY time DESC
       SQL
         rs.each do
           logs << new(rs.read(Time), rs.read(String), rs.read(String))
@@ -94,7 +97,10 @@ module Scylla
           created_at,
           hook_data->'pull_request'->>'number',
           exit_status
-        FROM results WHERE project_id = $1 LIMIT $2
+        FROM results
+        WHERE project_id = $1
+        ORDER BY created_at DESC
+        LIMIT $2
       SQL
         rs.each do
           builds << Build.new(
@@ -122,7 +128,9 @@ module Scylla
           created_at,
           hook_data->'pull_request'->>'number',
           exit_status
-        FROM results LIMIT $1
+        FROM results
+        ORDER BY created_at DESC
+        LIMIT $1
       SQL
         rs.each do
           builds << Build.new(

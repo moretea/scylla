@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchFromGitHub, crystal, libxml2, openssl, zlib, pkgconfig
+{ stdenv, lib, fetchFromGitHub, crystal, libxml2, openssl, zlib, pkgconfig, pwgen
 , test ? false }:
 let
   crystalPackages = lib.mapAttrs (name: src:
@@ -50,6 +50,7 @@ in stdenv.mkDerivation {
     cp -r $src/* .
     chmod +w -R .
     rm -rf lib
+    ${pwgen}/bin/pwgen > $out/random
     ln -s ${crystalLib} lib
     ${lib.optionalString test run-tests}
     ${crystal}/bin/crystal build --verbose --progress --release src/server.cr -o $out/bin/scylla

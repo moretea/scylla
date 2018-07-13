@@ -45,9 +45,22 @@ module Scylla
         end
       end
 
-      pp({executable => args})
+      sh(executable, args, &block)
+    end
 
-      Process.run(executable, args: args) do |status|
+    def sh(cmd : String, args : Array(String), &block : String, String -> _)
+      dbg = cmd
+      args.each do |arg|
+        if arg =~ /^[\w\/.:-]+$/
+          dbg += " #{arg}"
+        else
+          dbg += " '#{arg}'"
+        end
+      end
+      L.debug dbg
+      block.call("command", dbg)
+
+      Process.run(cmd, args: args) do |status|
         spawn do
           begin
             status.output.each_line do |line|
@@ -71,7 +84,7 @@ module Scylla
         end
       end
 
-      raise "#{executable} failed" unless $?.success?
+      raise "#{cmd} #{args} failed" unless $?.success?
       $?
     end
   end
