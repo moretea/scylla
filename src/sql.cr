@@ -146,5 +146,18 @@ module Scylla
 
       builds
     end
+
+    def self.nix_logs(result_id : String)
+      url, sha = Repo.query_one(<<-SQL, result_id, as: {String, String})
+        SELECT
+          hook_data->'pull_request'->'head'->'repo'->>'clone_url',
+          hook_data->'pull_request'->'head'->>'sha'
+        FROM results
+        WHERE id = $1
+        LIMIT 1
+      SQL
+
+      CI.nix_logs(url, sha)
+    end
   end
 end

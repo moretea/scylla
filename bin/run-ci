@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+set -e
+
+adddate() {
+    while IFS= read -r line; do
+        echo "$(date --iso-8601=ns) $line"
+    done
+}
+
+log() {
+    echo "$@" | adddate | tee -a output >> commands
+    "$@"
+}
+
+root=$1
+url=$2
+sha=$3
+
+rm -rf "$root"
+mkdir -p "$root"
+cd "$root"
+
+exec 2> >(adddate | tee -a stderr | tee -a output > /dev/stderr)
+exec 1> >(adddate | tee -a stdout | tee -a output > /dev/stdout)
+
+echo building...
+
+log git clone "$url" source
+log git -c advice.detachedHead=false -C source checkout "$sha"
+log nix build \
+    --allow-import-from-derivation \
+    --auto-optimise-store \
+    --enforce-determinism \
+    --fallback \
+    --http2 \
+    --keep-build-log \
+    --restrict-eval \
+    --show-trace \
+    --max-build-log-size 10000000 \
+    --max-silent-time 600 \
+    --timeout 600 \
+    --option allowed-uris "https://github.com/ https://source.xing.com/" \
+    -I ./source \
+    -f ./source/ci.nix

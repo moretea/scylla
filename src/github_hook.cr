@@ -1,5 +1,5 @@
-# body = File.read("/mnt/big/github/manveru/scylla/hook_pr_synchronize.json")
-# Scylla::GitHubHook::PullRequest.from_json(body).handle(body)
+body = File.read("/mnt/big/github/manveru/scylla/hook_pr_synchronize.json")
+Scylla::GitHubHook::PullRequest.from_json(body).handle(body)
 
 module Scylla
   struct GitHubHook

@@ -1,5 +1,4 @@
-{ stdenv, lib, fetchFromGitHub, crystal, libxml2, openssl, zlib, pkgconfig, pwgen
-, test ? false }:
+{ stdenv, lib, fetchFromGitHub, crystal, libxml2, openssl, zlib, pkgconfig, tree, stuff }:
 let
   crystalPackages = lib.mapAttrs (name: src:
     stdenv.mkDerivation {
@@ -28,12 +27,11 @@ let
     '';
   };
 
-  run-tests = ''
-    echo run tests...
-  '';
 in stdenv.mkDerivation {
-  name = "scylla-static";
-  src = fetchGit ./.;
+  name = "scylla";
+  src = fetchTarball {
+    url = https://github.com/manveru/scylla/archive/testing.tar.gz;
+  };
 
   phases = "buildPhase";
 
@@ -42,6 +40,7 @@ in stdenv.mkDerivation {
     openssl
     zlib
     pkgconfig
+    tree
   ];
 
   buildPhase = ''
@@ -50,9 +49,9 @@ in stdenv.mkDerivation {
     cp -r $src/* .
     chmod +w -R .
     rm -rf lib
-    ${pwgen}/bin/pwgen > $out/random
+    echo ${stuff} > $out/stuff
     ln -s ${crystalLib} lib
-    ${lib.optionalString test run-tests}
+    tree /
     ${crystal}/bin/crystal build --verbose --progress --release src/server.cr -o $out/bin/scylla
   '';
 }

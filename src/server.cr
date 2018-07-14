@@ -47,6 +47,7 @@ get "/builds/:id" do |env|
   id = env.params.url["id"]
   info = Scylla::Result.info_for_result(id)
   logs = Scylla::Log.all_for_result(id)
+  nix_logs = Scylla::Result.nix_logs(id)
 
   duration = 0
   if logs.size > 0

@@ -6,9 +6,19 @@
   <dt>Duration:</dt>
   <dd><%= duration %></dd>
 </dl>
-<h3>Log</h3>
+
+<h3>Build Log</h3>
+
 <pre class="console-output">
 <%- logs.each do |log| -%>
 <time datetime="<%= log.time %>"><%= log.time %></time>&nbsp;<code class="shell"><%= log.line %></code>
+<%- end -%>
+</pre>
+
+<h3>Nix Logs</h3>
+
+<pre class="console-output">
+<%- nix_logs.each do |log| -%>
+<code class="shell"><%= log %></code>
 <%- end -%>
 </pre>

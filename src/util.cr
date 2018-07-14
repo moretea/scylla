@@ -57,30 +57,19 @@ module Scylla
           dbg += " '#{arg}'"
         end
       end
+
       L.debug dbg
       block.call("command", dbg)
 
       Process.run(cmd, args: args) do |status|
-        spawn do
-          begin
-            status.output.each_line do |line|
-              L.debug line
-              block.call("stdout", line)
-            end
-          rescue ex
-            pp ex
-          end
+        status.output.each_line do |line|
+          L.debug "stdout: #{line}"
+          block.call("stdout", line)
         end
 
-        spawn do
-          begin
-            status.error.each_line.each do |line|
-              L.debug line
-              block.call("stderr", line)
-            end
-          rescue ex
-            pp ex
-          end
+        status.error.each_line do |line|
+          L.debug "error: #{line}"
+          block.call("error", line)
         end
       end
 
