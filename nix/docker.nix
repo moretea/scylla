@@ -7,7 +7,7 @@ let
     "com.xing.git.time"   = git-info "git show -s --format=%cI HEAD" ./..;
     "com.xing.git.remote" = git-info "git config --get remote.origin.url" ./..;
   };
-  scylla = callPackage ./. {};
+  scylla = callPackage ./.. {};
 in
 dockerTools.buildImage {
   name = "scylla";
@@ -18,6 +18,7 @@ dockerTools.buildImage {
     WorkingDir = "/";
     EntryPoint = ["${bashInteractive}/bin/bash"];
     Env = [
+      "HOST=0.0.0.0"
       "PORT=80"
     ];
     ExposedPorts = {

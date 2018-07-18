@@ -1,0 +1,3 @@
+CREATE USER scylla WITH PASSWORD 'scylla';
+CREATE DATABASE scyla_dev;
+GRANT ALL PRIVILEGES ON DATABASE scylla_dev to scylla;

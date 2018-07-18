@@ -15,7 +15,6 @@ end of the day, all we care about is that it works.
 * Create binaries
 * Run tests
 * Populate your Nix cache
-* Push to [Cachix](https://cachix.org/)
 * Update your GitHub PR status
 * Serve logs of your project builds
 

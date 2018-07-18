@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchFromGitHub, crystal, libxml2, openssl, zlib, pkgconfig, tree, stuff }:
+{ stdenv, lib, fetchFromGitHub, crystal, libxml2, openssl, zlib, pkgconfig, tree }:
 let
   crystalPackages = lib.mapAttrs (name: src:
     stdenv.mkDerivation {
@@ -49,7 +49,6 @@ in stdenv.mkDerivation {
     cp -r $src/* .
     chmod +w -R .
     rm -rf lib
-    echo ${stuff} > $out/stuff
     ln -s ${crystalLib} lib
     tree /
     ${crystal}/bin/crystal build --verbose --progress --release src/server.cr -o $out/bin/scylla

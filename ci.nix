@@ -1,4 +1,4 @@
 { pkgs ? import ./nix/nixpkgs.nix }: {
-  scylla = pkgs.callPackage ./. { stuff = "nope"; };
+  scylla = pkgs.callPackage ./. {};
   docker = pkgs.callPackage ./nix/docker.nix {};
 }

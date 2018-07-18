@@ -2,32 +2,41 @@
 
 set -e
 
-adddate() {
-    while IFS= read -r line; do
-        echo "$(date --iso-8601=ns) $line"
-    done
-}
-
-log() {
-    echo "$@" | adddate | tee -a output >> commands
-    "$@"
-}
-
 root=$1
 url=$2
 sha=$3
 
+adddate() {
+    set +x
+    while IFS= read -r line; do
+        echo "$(date --iso-8601=ns) $line"
+    done
+    set -x
+}
+
+log() {
+    echo "$@" | adddate | tee -a "$root/output" | tee -a "$root/commands" > /dev/stderr
+    "$@"
+}
+
+rm -rf ci # FIXME: cleanup
 rm -rf "$root"
 mkdir -p "$root"
-cd "$root"
 
-exec 2> >(adddate | tee -a stderr | tee -a output > /dev/stderr)
-exec 1> >(adddate | tee -a stdout | tee -a output > /dev/stdout)
+exec 1> >(adddate | tee -a "$root/stdout" | tee -a "$root/output" > /dev/stderr)
+exec 2> >(adddate | tee -a "$root/stderr" | tee -a "$root/output" > /dev/stderr)
 
 echo building...
 
-log git clone "$url" source
-log git -c advice.detachedHead=false -C source checkout "$sha"
+set -x
+
+export GIT_TRACE=2
+export NIX_ENV=""
+export NIX_SHOW_STATS=1
+export NIX_COUNT_CALLS=1
+
+log git clone "$url" "$root/source"
+log git -c advice.detachedHead=false -C "$root/source" checkout "$sha"
 log nix build \
     --allow-import-from-derivation \
     --auto-optimise-store \
@@ -38,8 +47,12 @@ log nix build \
     --restrict-eval \
     --show-trace \
     --max-build-log-size 10000000 \
-    --max-silent-time 600 \
-    --timeout 600 \
+    --max-silent-time 1 \
+    --timeout 10 \
     --option allowed-uris "https://github.com/ https://source.xing.com/" \
-    -I ./source \
-    -f ./source/ci.nix
+    -I "$root/source" \
+    -I ./nix \
+    --argstr url "$url" \
+    --argstr sha "$sha" \
+    --arg ciNix "(import $root/source/ci.nix)" \
+    -f ./nix/run-ci.nix
