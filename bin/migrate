@@ -1,7 +1,0 @@
-#! /usr/bin/env crystal
-
-require "pg"
-require "micrate"
-
-Micrate::DB.connection_url = ENV["DATABASE_URL"]
-Micrate::Cli.run

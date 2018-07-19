@@ -1,0 +1,6 @@
+<h2>Builds for {{.Name}}</h2>
+{{range .Builds}}
+  <div>
+    <a href="/builds/{{.Project}}/{{.ID}}">{{.ID}}</a>
+  </div>
+{{end}}

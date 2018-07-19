@@ -1,0 +1,17 @@
+<h2>Build {{.Job.Hook.Repository.FullName}} Revision {{.Job.Hook.PullRequest.Head.Sha}}</h2>
+{{range .Results}}
+  <div>
+    <h3>Path</h3>
+    {{.NixPath}}
+    <h3>Stdout</h3>
+    <pre class="console-output">
+      <code class="shell">{{.NixStdout}}</code>
+    </pre>
+    <h3>Stderr</h3>
+    <pre class="console-output">
+      <code class="shell">{{.NixStderr}}</code>
+    </pre>
+    <h3>Error</h3>
+    {{.NixError}}
+  </div>
+{{end}}

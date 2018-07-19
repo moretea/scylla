@@ -1,8 +1,8 @@
-{ callPackage, dockerTools, git-info, bashInteractive }:
+{ callPackage, dockerTools, git-info }:
 let
   Labels = {
     maintainer = "Michael Fellinger <mf@seitenschmied.at>";
-    "com.xing.docker_build.target" = "misc";
+    "com.xing.docker_build.target" = "prod";
     "com.xing.git.sha1"   = git-info "git rev-parse --verify HEAD" ./..;
     "com.xing.git.time"   = git-info "git show -s --format=%cI HEAD" ./..;
     "com.xing.git.remote" = git-info "git config --get remote.origin.url" ./..;
@@ -11,12 +11,12 @@ let
 in
 dockerTools.buildImage {
   name = "scylla";
-  tag = "misc";
+  tag = "production";
   created = Labels."com.xing.git.time";
   config = {
     inherit Labels;
     WorkingDir = "/";
-    EntryPoint = ["${bashInteractive}/bin/bash"];
+    EntryPoint = ["${scylla}/bin/scylla"];
     Env = [
       "HOST=0.0.0.0"
       "PORT=80"

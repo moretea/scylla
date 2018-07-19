@@ -1,56 +1,31 @@
-{ stdenv, lib, fetchFromGitHub, crystal, libxml2, openssl, zlib, pkgconfig, tree }:
-let
-  crystalPackages = lib.mapAttrs (name: src:
-    stdenv.mkDerivation {
-      name = lib.replaceStrings ["/"] ["-"] name;
-      src = fetchFromGitHub src;
-      phases = "installPhase";
-      installPhase = ''cp -r $src $out'';
-      passthru = { libName = name; };
-    }
-  ) (import ./shards.nix);
+{ stdenv, buildGoPackage, fetchFromGitHub, runTests ? true }:
 
-  crystalLib = stdenv.mkDerivation {
-    name = "crystal-lib";
-    src = lib.attrValues crystalPackages;
-    libNames = lib.mapAttrsToList (k: v: [k v]) crystalPackages;
-    phases = "buildPhase";
-    buildPhase = ''
-      mkdir -p $out
-      linkup () {
-        while [ "$#" -gt 0 ]; do
-          ln -s $2 $out/$1
-          shift; shift
-        done
-      }
-      linkup $libNames
-    '';
+buildGoPackage rec {
+  name = "scylla-unstable-${version}";
+  version = "2018-07-21";
+  rev = "1d6a7ec1c5753cfa4bf1c158770437815a7f9241";
+
+  goPackagePath = "github.com/manveru/scylla";
+
+  src = stdenv.lib.cleanSource ./.;
+  # src = fetchFromGitHub {
+  #   inherit rev;
+  #   owner = "manveru";
+  #   repo = "scylla";
+  #   sha256 = "1skjli6zpb3vm17glg3w65j4bizza0nvmmbh1gwj9gsjd89cqfri";
+  # };
+
+  goDeps = ./deps.nix;
+
+  preBuild = ''
+    go generate ${goPackagePath}
+  '' + (stdenv.lib.optionalString runTests "go test ${goPackagePath}");
+
+  meta = {
+    description = "A simple, easy to deploy Nix Continous Integration server";
+    homepage = https://github.com/manveru/scylla;
+    license = stdenv.lib.licenses.mit;
+    maintainers = stdenv.lib.maintainers.manveru;
+    platforms = stdenv.lib.platforms.unix;
   };
-
-in stdenv.mkDerivation {
-  name = "scylla";
-  src = fetchTarball {
-    url = https://github.com/manveru/scylla/archive/testing.tar.gz;
-  };
-
-  phases = "buildPhase";
-
-  buildInputs = [
-    libxml2
-    openssl
-    zlib
-    pkgconfig
-    tree
-  ];
-
-  buildPhase = ''
-    mkdir -p $out/bin tmp
-    cd tmp
-    cp -r $src/* .
-    chmod +w -R .
-    rm -rf lib
-    ln -s ${crystalLib} lib
-    tree /
-    ${crystal}/bin/crystal build --verbose --progress --release src/server.cr -o $out/bin/scylla
-  '';
 }

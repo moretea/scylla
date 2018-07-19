@@ -1,9 +1,13 @@
 { pkgs ? import ./nix/nixpkgs.nix }: with pkgs;
-mkShell {
+let goDeps = callPackage ./. { runTests = false; };
+in mkShell {
   buildInputs = [
     nix
     mint
-    crystal shards
-    openssl zlib libyaml
+
+    dep2nix
+    gotools
+    goDeps.go
+    nix-prefetch-git
   ];
 }

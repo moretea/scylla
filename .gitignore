@@ -3,4 +3,6 @@ lib
 .envrc
 ci
 result
-result-2
+result-*
+scylla
+vendor

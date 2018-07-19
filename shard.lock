@@ -30,7 +30,7 @@ shards:
 
   msgpack:
     github: benoist/msgpack-crystal
-    version: 0.8.0
+    version: 0.10.0
 
   pg:
     github: will/crystal-pg
@@ -44,7 +44,7 @@ shards:
     github: imdrasil/sam.cr
     version: 0.2.4
 
-  tren:
-    github: sdogruyol/tren
+  spec-kemal:
+    github: kemalcr/spec-kemal
     version: 0.4.0
 
