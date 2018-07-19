@@ -10,7 +10,7 @@ module Scylla
     end
 
     def self.root(clone_url : String, sha : String)
-      "ci/#{clone_url.gsub(/\W+/, "_")}-#{sha}"
+      "ci/#{clone_url.gsub(/\W+/, "_")}/#{sha}"
     end
 
     def self.nix_logs(clone_url : String, sha : String) : Array(String)

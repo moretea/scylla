@@ -47,12 +47,15 @@ log nix build \
     --restrict-eval \
     --show-trace \
     --max-build-log-size 10000000 \
-    --max-silent-time 1 \
-    --timeout 10 \
+    --max-silent-time 30 \
+    --timeout 30 \
     --option allowed-uris "https://github.com/ https://source.xing.com/" \
+    --out-link "$root/result" \
     -I "$root/source" \
     -I ./nix \
     --argstr url "$url" \
     --argstr sha "$sha" \
     --arg ciNix "(import $root/source/ci.nix)" \
     -f ./nix/run-ci.nix
+
+rm -rf "$root/source"
