@@ -213,6 +213,7 @@ func (j *githubJob) build() string {
 }
 
 func (j *githubJob) status(state, description string) {
+	fail
 	setGithubStatus(
 		j.targetURL(),
 		j.Hook.PullRequest.StatusesURL,
