@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -26,24 +28,6 @@ func postHooksGithub(ctx *macaron.Context, Hook GithubHook) {
 	ctx.JSON(200, map[string]string{"status": "OK"})
 }
 
-func progressHost(ctx *macaron.Context) string {
-	proto := ctx.Req.Header.Get("X-Forwarded-Proto")
-	if proto == "" {
-		proto = "http"
-	}
-	return fmt.Sprintf("%s://%s", proto, ctx.Req.Host)
-}
-
-func processGithub(pool *tunny.Pool, hook *GithubHook, host string) {
-	j := &githubJob{Hook: hook, Host: host}
-	j.status("pending", "Queueing...")
-	_, err := pool.ProcessTimed(j, time.Minute*30)
-	if err == tunny.ErrJobTimedOut {
-		j.status("error", "Timeout after 30 minutes")
-		log.Printf("Build of %s %s timed out\n", j.cloneURL(), j.sha())
-	}
-}
-
 type githubJob struct {
 	Hook *GithubHook
 	Host string
@@ -62,6 +46,21 @@ func newGithubJobFromJSONFile(path string) *githubJob {
 		return nil
 	}
 	return job
+}
+
+func (j *githubJob) build() string {
+	log.Printf("Starting work on %s %s...", j.cloneURL(), j.sha())
+
+	_ = os.RemoveAll(j.sourceDir())
+
+	j.clone()
+	j.persistHook()
+	if err := j.nixBuild(); err == nil {
+		// keep around for now so we can get logs
+		_ = os.RemoveAll(j.sourceDir())
+	}
+
+	return "OK"
 }
 
 var sanitizeUrlPath = regexp.MustCompile(`[^a-zA-Z0-9-]+`)
@@ -147,11 +146,35 @@ func (j *githubJob) nix(subcmd string, args ...string) (*bytes.Buffer, *bytes.Bu
 	))
 }
 
-func (j *githubJob) nixLog() {
-	j.nix("log", "-f", j.ciNixPath(), "")
+func (j *githubJob) nixLog() (string, string, error) {
+	sout, serr, err := j.nix("log", "-f", j.ciNixPath(), "")
+	if err == nil {
+		return sout.String(), serr.String(), err
+	}
+
+	stderrPath := filepath.Join(j.buildDir(), "stderr")
+	stderrBytes, err := ioutil.ReadFile(stderrPath)
+	if err != nil {
+		return "", "", errors.New("No trace of logs found")
+	}
+
+	drvs := parseDrvsFromStderr(stderrBytes)
+	for _, drv := range drvs {
+		sout, serr, err = runCmd(exec.Command("nix", "log", drv))
+	}
+
+	return sout.String(), serr.String(), err
 }
 
-func (j *githubJob) nixBuild() {
+var matchFailine = regexp.MustCompile(`error: build of .+ failed`)
+var matchFailDrvs = regexp.MustCompile(`[^'\s]+\.drv`)
+
+func parseDrvsFromStderr(input []byte) []string {
+	line := matchFailine.FindString(string(input))
+	return matchFailDrvs.FindAllString(line, -1)
+}
+
+func (j *githubJob) nixBuild() error {
 	j.status("pending", "Nix Build...")
 	stdout, stderr, err := j.nix(
 		"build", "--out-link", j.resultLink(), "-f", j.ciNixPath())
@@ -160,9 +183,11 @@ func (j *githubJob) nixBuild() {
 
 	if err != nil {
 		j.status("failure", err.Error())
-	} else {
-		j.status("success", "Evaluation succeeded")
+		return errors.New("Nix Failure: " + err.Error())
 	}
+
+	j.status("success", "Evaluation succeeded")
+	return nil
 }
 
 func (j *githubJob) writeOutput(stdout, stderr *bytes.Buffer) {
@@ -198,22 +223,7 @@ func (j *githubJob) persistHook() {
 	}
 }
 
-func (j *githubJob) build() string {
-	log.Printf("Starting work on %s %s...", j.cloneURL(), j.sha())
-
-	_ = os.RemoveAll(j.sourceDir())
-
-	j.clone()
-	j.persistHook()
-	j.nixBuild()
-
-	_ = os.RemoveAll(j.sourceDir())
-
-	return "OK"
-}
-
 func (j *githubJob) status(state, description string) {
-	fail
 	setGithubStatus(
 		j.targetURL(),
 		j.Hook.PullRequest.StatusesURL,
@@ -252,4 +262,22 @@ func setGithubStatus(targetURL, statusURL, state, description string) {
 
 func cleanJoin(parts ...string) string {
 	return filepath.Clean(filepath.Join(parts...))
+}
+
+func progressHost(ctx *macaron.Context) string {
+	proto := ctx.Req.Header.Get("X-Forwarded-Proto")
+	if proto == "" {
+		proto = "http"
+	}
+	return fmt.Sprintf("%s://%s", proto, ctx.Req.Host)
+}
+
+func processGithub(pool *tunny.Pool, hook *GithubHook, host string) {
+	j := &githubJob{Hook: hook, Host: host}
+	j.status("pending", "Queueing...")
+	_, err := pool.ProcessTimed(j, time.Minute*30)
+	if err == tunny.ErrJobTimedOut {
+		j.status("error", "Timeout after 30 minutes")
+		log.Printf("Build of %s %s timed out\n", j.cloneURL(), j.sha())
+	}
 }

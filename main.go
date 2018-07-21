@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
 	"os/exec"
 	"runtime"
 
@@ -57,8 +56,6 @@ func runCmd(cmd *exec.Cmd) (*bytes.Buffer, *bytes.Buffer, error) {
 	stderrIn, _ := cmd.StderrPipe()
 
 	var stdoutBuf, stderrBuf bytes.Buffer
-	stdout := io.MultiWriter(os.Stdout, &stdoutBuf)
-	stderr := io.MultiWriter(os.Stderr, &stderrBuf)
 
 	if err := cmd.Start(); err != nil {
 		return nil, nil, fmt.Errorf("%s failed with %s\n", cmd.Path, err)
@@ -67,11 +64,11 @@ func runCmd(cmd *exec.Cmd) (*bytes.Buffer, *bytes.Buffer, error) {
 	var errStdout, errStderr error
 
 	go func() {
-		_, errStdout = io.Copy(stdout, stdoutIn)
+		_, errStdout = io.Copy(&stdoutBuf, stdoutIn)
 	}()
 
 	go func() {
-		_, errStderr = io.Copy(stderr, stderrIn)
+		_, errStderr = io.Copy(&stderrBuf, stderrIn)
 	}()
 
 	if err := cmd.Wait(); err != nil {

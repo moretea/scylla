@@ -1,17 +1,39 @@
-<h2>Build {{.Job.Hook.Repository.FullName}} Revision {{.Job.Hook.PullRequest.Head.Sha}}</h2>
+<h2>
+  Build of
+  <a href="{{.ProjectLink}}">{{.Job.Hook.Repository.FullName}}</a>
+  Revision
+  <a href="">{{.Job.Hook.PullRequest.Head.Sha}}</a>
+</h2>
 {{range .Results}}
   <div>
     <h3>Path</h3>
     {{.NixPath}}
     <h3>Stdout</h3>
     <pre class="console-output">
-      <code class="shell">{{.NixStdout}}</code>
+      <code class="shell">{{- .NixStdout -}}</code>
     </pre>
     <h3>Stderr</h3>
     <pre class="console-output">
-      <code class="shell">{{.NixStderr}}</code>
+      <code class="shell">{{- .NixStderr -}}</code>
     </pre>
     <h3>Error</h3>
     {{.NixError}}
+  </div>
+{{else}}
+  <div>
+    <h2>Stdout</h2>
+    <pre class="console-output">
+      <code class="shell">
+        {{- .NixLogStdout -}}
+      </code>
+    </pre>
+    <h2>Stderr</h2>
+    <pre class="console-output">
+      <code class="shell">
+        {{- .NixLogStderr -}}
+      </code>
+    </pre>
+    <h2>Errors</h2>
+    {{.NixLogErr}}
   </div>
 {{end}}

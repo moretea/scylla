@@ -1,7 +1,7 @@
 lib
 .direnv
 .envrc
-ci
+ci/
 result
 result-*
 scylla
