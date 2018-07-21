@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -13,13 +12,19 @@ import (
 	macaron "gopkg.in/macaron.v1"
 
 	"github.com/Jeffail/tunny"
+	arg "github.com/alexflint/go-arg"
 )
-
-var serverURL = flag.String("url", "https://scylla.ngrok.io", "set host used for GH status links")
 
 var pool *tunny.Pool
 
+var config struct {
+	GithubUser  string `arg:"--github-user,required,env:GITHUB_USER"`
+	GithubToken string `arg:"--github-token,required,env:GITHUB_TOKEN"`
+}
+
 func main() {
+	arg.MustParse(&config)
+
 	pool = tunny.NewFunc(runtime.NumCPU(), worker)
 
 	defer pool.Close()

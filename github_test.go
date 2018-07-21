@@ -7,9 +7,10 @@ import (
 )
 
 func TestGithubJob(t *testing.T) {
-	job := &githubJob{hook: &GithubHook{}}
-	job.hook.Repository.FullName = "manveru/scylla"
-	job.hook.PullRequest.Head.Sha = "sample"
+	job := &githubJob{Hook: &GithubHook{}}
+	job.Hook.Repository.FullName = "manveru/scylla"
+	job.Hook.PullRequest.Head.Sha = "sample"
+	job.Host = "http://example.com"
 
 	Convey("pname creation", t, func() {
 		So(job.pname(), ShouldEqual, "manveru_scylla-sample")
@@ -21,5 +22,9 @@ func TestGithubJob(t *testing.T) {
 
 	Convey("resultLink", t, func() {
 		So(job.resultLink(), ShouldEqual, "ci/manveru_scylla/sample/result")
+	})
+
+	Convey("progressURL", t, func() {
+		So(job.targetURL(), ShouldEqual, "http://example.com/builds/manveru_scylla/sample")
 	})
 }

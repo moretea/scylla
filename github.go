@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -19,24 +20,33 @@ import (
 
 func postHooksGithub(ctx *macaron.Context, Hook GithubHook) {
 	if ctx.Req.Header.Get("X-Github-Event") == "pull_request" {
-		go processGithub(pool, &Hook)
+		go processGithub(pool, &Hook, progressHost(ctx))
 	}
 
 	ctx.JSON(200, map[string]string{"status": "OK"})
 }
 
-func processGithub(pool *tunny.Pool, hook *GithubHook) {
-	hook.status("pending", "Queueing...")
-	j := &githubJob{Hook: hook}
+func progressHost(ctx *macaron.Context) string {
+	proto := ctx.Req.Header.Get("X-Forwarded-Proto")
+	if proto == "" {
+		proto = "http"
+	}
+	return fmt.Sprintf("%s://%s", proto, ctx.Req.Host)
+}
+
+func processGithub(pool *tunny.Pool, hook *GithubHook, host string) {
+	j := &githubJob{Hook: hook, Host: host}
+	j.status("pending", "Queueing...")
 	_, err := pool.ProcessTimed(j, time.Minute*30)
 	if err == tunny.ErrJobTimedOut {
-		hook.status("error", "Timeout after 30 minutes")
+		j.status("error", "Timeout after 30 minutes")
 		log.Printf("Build of %s %s timed out\n", j.cloneURL(), j.sha())
 	}
 }
 
 type githubJob struct {
 	Hook *GithubHook
+	Host string
 }
 
 func newGithubJobFromJSONFile(path string) *githubJob {
@@ -58,6 +68,12 @@ var sanitizeUrlPath = regexp.MustCompile(`[^a-zA-Z0-9-]+`)
 
 func (j *githubJob) saneFullName() string {
 	return sanitizeUrlPath.ReplaceAllString(j.Hook.Repository.FullName, "_")
+}
+
+func (j *githubJob) targetURL() string {
+	uri, _ := url.Parse(j.Host)
+	uri.Path = fmt.Sprintf("/builds/%s/%s", j.saneFullName(), j.sha())
+	return uri.String()
 }
 
 func (j *githubJob) cloneURL() string {
@@ -93,12 +109,12 @@ func (j *githubJob) ciNixPath() string {
 }
 
 func (j *githubJob) clone() {
-	j.Hook.status("pending", "Cloning...")
+	j.status("pending", "Cloning...")
 
 	runCmd(exec.Command(
 		"git", "clone", j.cloneURL(), j.sourceDir()))
 
-	j.Hook.status("pending", "Checkout...")
+	j.status("pending", "Checkout...")
 
 	runCmd(exec.Command(
 		"git",
@@ -136,16 +152,16 @@ func (j *githubJob) nixLog() {
 }
 
 func (j *githubJob) nixBuild() {
-	j.Hook.status("pending", "Nix Build...")
+	j.status("pending", "Nix Build...")
 	stdout, stderr, err := j.nix(
 		"build", "--out-link", j.resultLink(), "-f", j.ciNixPath())
 
 	j.writeOutput(stdout, stderr)
 
 	if err != nil {
-		j.Hook.status("failure", err.Error())
+		j.status("failure", err.Error())
 	} else {
-		j.Hook.status("success", "Evaluation succeeded")
+		j.status("success", "Evaluation succeeded")
 	}
 }
 
@@ -196,18 +212,23 @@ func (j *githubJob) build() string {
 	return "OK"
 }
 
-func (h *GithubHook) status(state, description string) {
-	setGithubStatus(h.PullRequest.StatusesURL, h.PullRequest.Head.Sha, state, description)
+func (j *githubJob) status(state, description string) {
+	setGithubStatus(
+		j.targetURL(),
+		j.Hook.PullRequest.StatusesURL,
+		state,
+		description,
+	)
 }
 
-func setGithubStatus(url, id, state, description string) {
+func setGithubStatus(targetURL, statusURL, state, description string) {
 	if len(description) > 138 {
 		description = description[0:138]
 	}
 
 	status := map[string]string{
 		"state":       state,
-		"target_url":  fmt.Sprintf("%s/builds/%s", os.Getenv("SERVER_URL"), id),
+		"target_url":  targetURL,
 		"description": description,
 		"context":     "Scylla",
 	}
@@ -215,11 +236,13 @@ func setGithubStatus(url, id, state, description string) {
 
 	json.NewEncoder(body).Encode(&status)
 
-	req, err := http.NewRequest("POST", url, body)
+	req, err := http.NewRequest("POST", statusURL, body)
 	if err != nil {
 		log.Fatalf("Failed creating request: %s", err)
 	}
-	req.SetBasicAuth(os.Getenv("GITHUB_USER"), os.Getenv("GITHUB_TOKEN"))
+
+	req.SetBasicAuth(config.GithubUser, config.GithubToken)
+
 	_, err = http.DefaultClient.Do(req)
 	if err != nil {
 		log.Printf("Error while calling Github API: %s", err)

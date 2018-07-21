@@ -1,6 +1,15 @@
 # file generated from Gopkg.lock using dep2nix (https://github.com/nixcloud/dep2nix)
 [
   {
+    goPackagePath  = "github.com/BurntSushi/toml";
+    fetch = {
+      type = "git";
+      url = "https://github.com/BurntSushi/toml";
+      rev =  "a368813c5e648fee92e5f6c30e3944ff9d5e8895";
+      sha256 = "1sjxs2lwc8jpln80s4rlzp7nprbcljhy5mz4rf9995gq93wqnym5";
+    };
+  }
+  {
     goPackagePath  = "github.com/Jeffail/tunny";
     fetch = {
       type = "git";
@@ -10,12 +19,48 @@
     };
   }
   {
+    goPackagePath  = "github.com/Unknwon/bra";
+    fetch = {
+      type = "git";
+      url = "https://github.com/Unknwon/bra";
+      rev =  "c14c7f7994e36691f39c2443aa6f7be6d111456f";
+      sha256 = "1fq1qk1i14q80s2v8ijf2rnn8qia57frfm94flhj6k02i12gr0ny";
+    };
+  }
+  {
     goPackagePath  = "github.com/Unknwon/com";
     fetch = {
       type = "git";
       url = "https://github.com/Unknwon/com";
       rev =  "da59b551951d50441ca26b7a8cd81317f34df87f";
       sha256 = "03xx2kwi8pmglblvfxasppyvpbscq8l1r03r6jfkgi8c2a8i01am";
+    };
+  }
+  {
+    goPackagePath  = "github.com/Unknwon/log";
+    fetch = {
+      type = "git";
+      url = "https://github.com/Unknwon/log";
+      rev =  "e617c87089d3ff2ae05098eac8c9386069cd8461";
+      sha256 = "08w0hwkzrg59g8i72i147i8rsgs9g6v1w2kd5vmq1ykyhh1vpzx8";
+    };
+  }
+  {
+    goPackagePath  = "github.com/alexflint/go-arg";
+    fetch = {
+      type = "git";
+      url = "https://github.com/alexflint/go-arg";
+      rev =  "f7c0423bd11ee80ab81d25c6d46f492998af8547";
+      sha256 = "0b0pl8fv86lzgx7jhcwz5zk4263l55x38lvq1sf3fwj0jn0ji636";
+    };
+  }
+  {
+    goPackagePath  = "github.com/alexflint/go-scalar";
+    fetch = {
+      type = "git";
+      url = "https://github.com/alexflint/go-scalar";
+      rev =  "e80c3b7ed292b052c7083b6fd7154a8422c33f65";
+      sha256 = "1mwn4mdc8fqcchvvxj4gmm4zy40jv0l34w1556wxkf0z2w610rfb";
     };
   }
   {
@@ -64,6 +109,33 @@
     };
   }
   {
+    goPackagePath  = "github.com/k0kubun/pp";
+    fetch = {
+      type = "git";
+      url = "https://github.com/k0kubun/pp";
+      rev =  "e057ee7a28277be4d2af303443b6da377768181f";
+      sha256 = "00cppzr0hff6j9ff5jdfcx1d6ihmfpb3jxiw03nl7d4xakk4j8k6";
+    };
+  }
+  {
+    goPackagePath  = "github.com/mattn/go-colorable";
+    fetch = {
+      type = "git";
+      url = "https://github.com/mattn/go-colorable";
+      rev =  "efa589957cd060542a26d2dd7832fd6a6c6c3ade";
+      sha256 = "0kshi4hvm0ayrsxqxy0599iv81kryhd2fn9lwjyczpj593cq069r";
+    };
+  }
+  {
+    goPackagePath  = "github.com/mattn/go-isatty";
+    fetch = {
+      type = "git";
+      url = "https://github.com/mattn/go-isatty";
+      rev =  "6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c";
+      sha256 = "0zs92j2cqaw9j8qx1sdxpv3ap0rgbs0vrvi72m40mg8aa36gd39w";
+    };
+  }
+  {
     goPackagePath  = "github.com/smartystreets/assertions";
     fetch = {
       type = "git";
@@ -82,12 +154,39 @@
     };
   }
   {
+    goPackagePath  = "github.com/urfave/cli";
+    fetch = {
+      type = "git";
+      url = "https://github.com/urfave/cli";
+      rev =  "8e01ec4cd3e2d84ab2fe90d8210528ffbb06d8ff";
+      sha256 = "0cpr10n4ps3gcdbcink71ry9hzhdb5rrcysmylybs8h2lzxqgc1i";
+    };
+  }
+  {
     goPackagePath  = "golang.org/x/crypto";
     fetch = {
       type = "git";
       url = "https://go.googlesource.com/crypto";
       rev =  "a2144134853fc9a27a7b1e3eb4f19f1a76df13c9";
       sha256 = "0hjjk6k9dq7zllwsw9icdfbli12ii379q2lajd6l7lyw72wy28by";
+    };
+  }
+  {
+    goPackagePath  = "golang.org/x/sys";
+    fetch = {
+      type = "git";
+      url = "https://go.googlesource.com/sys";
+      rev =  "ac767d655b305d4e9612f5f6e33120b9176c4ad4";
+      sha256 = "1ds29n5lh4j21hmzxz7vk7hv1k6sixc7f0zsdc9xqdg0j7d212zm";
+    };
+  }
+  {
+    goPackagePath  = "gopkg.in/fsnotify/fsnotify.v1";
+    fetch = {
+      type = "git";
+      url = "https://github.com/fsnotify/fsnotify";
+      rev =  "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9";
+      sha256 = "07va9crci0ijlivbb7q57d2rz9h27zgn2fsm60spjsqpdbvyrx4g";
     };
   }
   {
