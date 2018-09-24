@@ -12,14 +12,16 @@ olympus.namespace = "e-recruiting-api-team"
 olympus.tagGeneratorName = "scylla"
 
 // Configure the image name.
-olympus.dockerImage = "quay.dc.xing.com/${olympus.namespace}/${olympus.tagGeneratorName}"
+olympus.dockerImage = "quay.dc.xing.com/e-recruiting-api-team/scylla"
 
 // Configure the source repository to prevent pushing images and deployment.
-olympus.sourceRepository = "https://source.xing.com/${olympus.namespace}/${olympus.tagGeneratorName}.git"
+olympus.sourceRepository = "https://source.xing.com/e-recruiting-api-team/scylla.git"
 
 // Specify whether you want your version tags to be pushed back to your git repository.
 // This will require you to add the github-script user as a collaborator to your git repo.
 olympus.pushVersionTagsToGitRepository = true
+
+def testTag = UUID.randomUUID().toString().replaceAll("-", "")
 
 // Please check whether the default pipeline is appropriate for you.
 // See https://source.xing.com/olympus/olenkins#defaultpipeline.
