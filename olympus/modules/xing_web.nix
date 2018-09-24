@@ -34,7 +34,7 @@ in
       annotations."com.xing.dynamic-config" = "enabled";
     };
     spec = {
-      revisionHistoryLimit= 5;
+      revisionHistoryLimit = 5;
       replicas = replicas;
       selector = {
         matchLabels = {
@@ -103,15 +103,19 @@ in
             };
             readinessProbe = {
               # Make sure the port match the one define in the livenessProbe (default curl port is 80)
-              exec.command = ["/bin/sh" "-c" ''test "$(curl -s localhost/_system/alive)" = "ALIVE"''];
+              exec.command = [
+                "${nixpkgs.busybox}/bin/sh" "-c" ''test "$(curl -s localhost/_system/alive)" = "ALIVE"''
+              ];
               failureThreshold = 1;
               initialDelaySeconds = 5;
               periodSeconds = 1;
             };
             lifecycle = {
-              postStart.exec.command = ["/bin/sh" "-c" "mkdir -p /virtual/lb_check/ && echo ALIVE > /virtual/lb_check/alive.txt"];
+              postStart.exec.command = [
+                "${nixpkgs.busybox}/bin/sh" "-c" "mkdir -p /virtual/lb_check/ && echo ALIVE > /virtual/lb_check/alive.txt"
+              ];
               # sleep >3s is necessary to let nginx ingress controller remove the endpoint
-              preStop.exec.command = ["/bin/sleep" "4"];
+              preStop.exec.command = ["${nixpkgs.coreutils}/bin/sleep" "4"];
             };
           };
         };
