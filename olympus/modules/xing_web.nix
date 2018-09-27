@@ -1,13 +1,5 @@
 let
-  nixpkgs = import ../../nix/nixpkgs.nix;
-  lib = nixpkgs.lib;
-  makeDeploymentID = sha:
-    lib.removeSuffix "\n" (builtins.readFile (
-      nixpkgs.runCommand "deployment_id" {sha = sha;} ''
-        ${nixpkgs.ruby}/bin/ruby -r securerandom -e 'print ENV["sha"][0...8] + "-#{SecureRandom.hex(4)}"' > $out
-      ''
-    ));
-  tagFromGit = nixpkgs.git-info "git rev-parse --verify HEAD" ./../..;
+  inherit (import ../../nix/nixpkgs.nix) makeDeploymentID tagFromGit busybox coreutils;
 in
 
 { appName
@@ -16,10 +8,10 @@ in
 , namespace
 , replicas
 , args ? []
-, environment ? {}
+, env ? []
 , deploymentID ? makeDeploymentID tag
 , logjamName ? appName
-, tag ? tagFromGit
+, tag ? tagFromGit ./../..
 , cpu
 , memory
 }:
@@ -82,9 +74,7 @@ in
               { configMapRef.name = "shared-dynamic-config"; }
               { configMapRef.name = "${appName}-config"; }
             ];
-            env = if (builtins.length (builtins.attrNames environment)) > 0
-                  then lib.mapAttrs' (name: value: lib.nameValuePair "${name}.value" value) environment
-                  else [];
+            env = env;
             resources = {
               requests = {
                 cpu = cpu;
@@ -104,7 +94,7 @@ in
             readinessProbe = {
               # Make sure the port match the one define in the livenessProbe (default curl port is 80)
               exec.command = [
-                "${nixpkgs.busybox}/bin/sh" "-c" ''test "$(curl -s localhost/_system/alive)" = "ALIVE"''
+                "${busybox}/bin/sh" "-c" ''test "$(curl -s localhost/_system/alive)" = "ALIVE"''
               ];
               failureThreshold = 1;
               initialDelaySeconds = 5;
@@ -112,10 +102,10 @@ in
             };
             lifecycle = {
               postStart.exec.command = [
-                "${nixpkgs.busybox}/bin/sh" "-c" "mkdir -p /virtual/lb_check/ && echo ALIVE > /virtual/lb_check/alive.txt"
+                "${busybox}/bin/sh" "-c" "mkdir -p /virtual/lb_check/ && echo ALIVE > /virtual/lb_check/alive.txt"
               ];
               # sleep >3s is necessary to let nginx ingress controller remove the endpoint
-              preStop.exec.command = ["${nixpkgs.coreutils}/bin/sleep" "4"];
+              preStop.exec.command = ["${coreutils}/bin/sleep" "4"];
             };
           };
         };
