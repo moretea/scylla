@@ -22,6 +22,7 @@ let
     memory = "512Mi";
     env = [
       (envSecret "BUILDERS")
+      (envSecret "DATABASE_URL")
       (envSecret "GITHUB_TOKEN")
       (envSecret "GITHUB_URL")
       (envSecret "GITHUB_USER")
