@@ -27,7 +27,6 @@
       </td>
     </template>
   </v-data-table>
-  <v-btn ripple color="info" @click="fetchBuilds">Fetch</v-btn>
 </div>
 </template>
 
@@ -50,9 +49,6 @@ export default {
   methods: {
     tableRowClassName({ row }) {
       return `${row.Status}-row`
-    },
-    fetchBuilds() {
-      this.$socket.sendObj({ Kind: 'last-builds' })
     },
     statusColor(status) {
       const statusMap = {

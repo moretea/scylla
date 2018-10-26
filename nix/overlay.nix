@@ -1,14 +1,6 @@
 with builtins;
-with lib;
 
-self: super:
-let
-  manveru-nur-packages = fetchTarball {
-    url = "https://github.com/manveru/nur-packages/archive/1f492c51eedd1f6abac7b753a7e56dfe46be1860.tar.gz";
-    sha256 = "0m5aywc2lnmycj6vvaa7d9p3wj763crpjrwqqylpq6j7bviniq4n";
-  };
-in {
-  git-info = (self.callPackage "${manveru-nur-packages}/default.nix" {}).lib.git-info;
+self: super: {
   go = super.go_1_11;
   decrypt-ejson = path:
     (fromJSON (readFile
@@ -26,4 +18,16 @@ in {
   dbmate = self.callPackage ./pkgs/dbmate {};
   mkShell = super.mkShell.override { stdenv = self.stdenvNoCC; };
   nodejs = super.nodejs-slim-10_x;
+  git-info = cmd: repo:
+    super.lib.removeSuffix "\n" (readFile (
+      super.stdenv.mkDerivation rec {
+        name = "git-info";
+        src = super.lib.sourceByRegex repo ["\.git.*"];
+        passAsFile = ["buildCommand"];
+        buildInputs = [super.git];
+        buildCommand = ''
+          cd $src
+          ${cmd} > $out
+        '';
+  }));
 }

@@ -99,7 +99,7 @@ export default {
   data() {
     return {
       live: true,
-      rowsPerPageItems: [2, 4, 8],
+      rowsPerPageItems: [50, 100, 200],
       pagination: {
         rowsPerPage: 4,
       },
